@@ -72,6 +72,7 @@ class SpecParser {
         m.version = root.get(VERSION).asText();
         m.baseUrl = new URL(root.get(BASE_URL).asText());
         m.name = root.get(NAME).asText();
+        m.expectedStatus.addAll(readIntegerCollection(root.get(EXPECTED_STATUS)));
         
         // read all object properties to find method
         JsonNode methods = root.get(METHODS);
@@ -85,6 +86,10 @@ class SpecParser {
             String path = n.get(PATH).asText();
             Collection<String> requiredParams = readStringCollection(n.get(REQUIRED_PARAMS));
             Collection<Integer> expectedStatuses = readIntegerCollection(n.get(EXPECTED_STATUS));
+            // If no status is defined on a method level, we use the default model expected statuses
+            if (expectedStatuses.isEmpty()) {
+                expectedStatuses.addAll(m.expectedStatus);
+            }
             Collection<String> optionalParams = readStringCollection(n.get(OPTIONAL_PARAMS));
             Map<String, String> headers = readStringMap(n.get(HEADERS));
             boolean authentication = false;
