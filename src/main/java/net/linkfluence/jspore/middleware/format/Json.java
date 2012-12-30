@@ -26,7 +26,12 @@ public class Json extends Middleware {
         String content = null;
         try {
              if(body != null){
-                content = mapper.writeValueAsString(body);
+                // If we have already a JSon string, we don't have to encode it in JSon !
+                if (body instanceof String) {
+                    content = (String) body;
+                } else {
+                    content = mapper.writeValueAsString(body);
+                }
                 request.setBody(content);
              }
         } catch (Exception ex) {
@@ -37,12 +42,14 @@ public class Json extends Middleware {
 
     @Override
     public Object receiveRequest(Response response, Object body, Method context) throws SporeException {
+        Object tree;
         try {
-            JsonNode tree = mapper.readTree(body.toString());
-            return next(response, tree, context);
+            tree = mapper.readTree(body.toString());
         } catch (Exception ex){
-            throw new SporeException(ex.getMessage() + "\ncannot deserialize response: "  + body.toString());
+            // When failing, we can assume that the content is not a JSon document but a String
+            tree = body.toString();
         }
+        return next(response, tree, context);
     }
     
     @Override
